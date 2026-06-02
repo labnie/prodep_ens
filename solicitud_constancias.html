@@ -523,8 +523,19 @@ async function enviarCorreo(d, driveLink){
     constancias: constanciasStr,
     obsGen: d.obsGen || ''
   });
-  await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec?' + params.toString(), {mode: 'no-cors'});
-  return {success: true};
+  const url = 'https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec?' + params.toString();
+  return new Promise((resolve) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    iframe.onload = () => { document.body.removeChild(iframe); resolve({success: true}); };
+    iframe.onerror = () => { document.body.removeChild(iframe); resolve({success: true}); };
+    document.body.appendChild(iframe);
+    setTimeout(() => {
+      if(document.body.contains(iframe)) document.body.removeChild(iframe);
+      resolve({success: true});
+    }, 5000);
+  });
 }
 
 
