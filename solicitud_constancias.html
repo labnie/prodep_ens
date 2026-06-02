@@ -488,25 +488,16 @@ function descargarPDF(d, nombreArchivo){
 }
 
 async function subirADrive(htmlContent, nombreArchivo){
-  const res = await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+  const res = await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:1000,
-      system:`Eres un asistente que sube archivos a Google Drive usando herramientas MCP. Sube el archivo HTML proporcionado a la carpeta con ID: ${FOLDER_ID}. Responde SOLO con JSON sin bloques de código: {"fileId":"...","fileUrl":"...","success":true} o {"success":false,"error":"..."}`,
-      messages:[{role:'user',content:`Sube este archivo a la carpeta de Google Drive con ID "${FOLDER_ID}". Nombre: "${nombreArchivo}". Tipo MIME: text/html. Contenido:
-
-${htmlContent}`}],
-      mcp_servers:[{type:'url',url:'https://drivemcp.googleapis.com/mcp/v1',name:'google-drive'}]
+      nombre: nombreArchivo,
+      htmlContent: htmlContent
     })
   });
-  const data = await res.json();
-  const textBlock = data.content?.find(b=>b.type==='text');
-  if(!textBlock) throw new Error('Sin respuesta');
-  const clean = textBlock.text.replace(/```json|```/g,'').trim();
-  const json = JSON.parse(clean);
-  if(!json.success) throw new Error(json.error||'Error en Drive');
+  const json = await res.json();
+  if(!json.success) throw new Error(json.error || 'Error al guardar en Drive');
   return json;
 }
 
@@ -585,15 +576,15 @@ async function enviar(){
     // 2. Subir HTML a Drive
     btn.innerHTML = '<span class="spinner"></span>Guardando en Drive...';
     setStatus('Guardando en Drive...','');
-    const result = await subirADrive(htmlContent, nombreHTML);
-    const link = result.fileUrl || `https://drive.google.com/file/d/${result.fileId}/view`;
+    await subirADrive(htmlContent, nombreHTML);
+    const link = 'https://drive.google.com/drive/folders/1zHN57ZDPVEgwLcWZIe9-LZ3lpwTmOPRq';
 
     // 3. Enviar correo al profesor
     btn.innerHTML = '<span class="spinner"></span>Enviando correo...';
     setStatus('Enviando correo al profesor...','');
     await enviarCorreo(d, link);
 
-    setStatus(`✅ Solicitud registrada. Guardada en Drive y correo enviado a <strong>${d.correo}</strong>. <a href="${link}" style="color:#6B1A2A;font-weight:600" target="_blank">Ver en Drive</a>`,'ok');
+    setStatus(`✅ Solicitud registrada. Guardada en Drive y correo enviado a <strong>${d.correo}</strong>.`,'ok');
 
   }catch(e){
     setStatus('Error: '+e.message,'err');
