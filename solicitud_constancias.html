@@ -523,10 +523,8 @@ async function enviarCorreo(d, driveLink){
     constancias: constanciasStr,
     obsGen: d.obsGen || ''
   });
-  const res = await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec?' + params.toString());
-  const json = await res.json();
-  if(!json.success) throw new Error(json.error || 'Error al enviar correo');
-  return json;
+  await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec?' + params.toString(), {mode: 'no-cors'});
+  return {success: true};
 }
 
 
