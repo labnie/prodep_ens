@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solicitud de Constancias PRODEP 2026 — ENSBCS</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     :root {
       --vino: #6B1A2A;
@@ -212,7 +213,6 @@
       <div><label class="field-label">Horas en Escuela Normal</label><input type="text" id="hrsNormal" placeholder="Mín. 20 hrs/semana"></div>
       <div><label class="field-label">Horas en Ed. Básica (si aplica)</label><input type="text" id="hrsBasica" placeholder="Suma mín. 30 hrs totales"></div>
     </div>
-    <div class="field-full"><label class="field-label">Fecha de entrega</label><input type="date" id="fecha"></div>
   </div>
 
   <hr>
@@ -323,7 +323,7 @@ function recopilar(){
     correo: document.getElementById('correo').value.trim(),
     hrsNormal: document.getElementById('hrsNormal').value.trim(),
     hrsBasica: document.getElementById('hrsBasica').value.trim(),
-    fecha: document.getElementById('fecha').value,
+    fecha: new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}),
     constancias,
     obsGen: document.getElementById('obsGen').value.trim()
   };
@@ -372,6 +372,121 @@ function setStatus(msg, tipo){
   el.innerHTML = msg;
   el.className = 'status-msg' + (tipo==='ok'?' status-ok':tipo==='err'?' status-err':'');
 }
+function descargarPDF(d, nombreArchivo){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const margen = 20;
+  const ancho = 210 - margen * 2;
+  let y = 20;
+
+  // Encabezado
+  doc.setFillColor(107, 26, 42);
+  doc.rect(0, 0, 210, 28, 'F');
+  doc.setFillColor(200, 151, 10);
+  doc.rect(0, 28, 210, 2, 'F');
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(13);
+  doc.setTextColor(255,255,255);
+  doc.text('Solicitud de Constancias — PRODEP Perfil Deseable 2026', margen, 12);
+  doc.setFont('helvetica','normal');
+  doc.setFontSize(9);
+  doc.setTextColor(232, 206, 212);
+  doc.text('ENSBCS "Profr. Enrique Estrada Lucero"  ·  Período: 2023–2025  ·  ' + d.fecha, margen, 21);
+
+  y = 38;
+
+  // Datos generales
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.setTextColor(107, 26, 42);
+  doc.text('DATOS DEL PROFESOR(A)', margen, y);
+  doc.setDrawColor(200, 151, 10);
+  doc.setLineWidth(0.5);
+  doc.line(margen, y+2, 210-margen, y+2);
+  y += 8;
+
+  const campos = [
+    ['Nombre completo', d.nombre],
+    ['CURP', d.curp],
+    ['Sede de adscripción', d.escuela],
+    ['Correo institucional', d.correo],
+    ['Horas en Escuela Normal', d.hrsNormal],
+    ['Horas en Ed. Básica', d.hrsBasica||'N/A'],
+    ['Fecha de solicitud', d.fecha],
+  ];
+  campos.forEach(([label, val]) => {
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(90,64,64);
+    doc.text(label + ':', margen, y);
+    doc.setFont('helvetica','normal');
+    doc.setTextColor(26,10,0);
+    doc.text(val||'—', margen + 52, y);
+    y += 6;
+  });
+
+  y += 4;
+
+  // Constancias
+  doc.setFont('helvetica','bold');
+  doc.setFontSize(10);
+  doc.setTextColor(107, 26, 42);
+  doc.text('CONSTANCIAS SOLICITADAS', margen, y);
+  doc.line(margen, y+2, 210-margen, y+2);
+  y += 8;
+
+  d.constancias.forEach((c, i) => {
+    if(y > 260) { doc.addPage(); y = 20; }
+    doc.setFillColor(i%2===0 ? 245:255, i%2===0 ? 236:255, i%2===0 ? 240:255);
+    doc.rect(margen, y-4, ancho, 5 + (c.detalle ? 5 : 0), 'F');
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(26,10,0);
+    const tituloLines = doc.splitTextToSize('• ' + c.titulo, ancho - 4);
+    doc.text(tituloLines, margen+2, y);
+    y += tituloLines.length * 5;
+    if(c.detalle){
+      doc.setFont('helvetica','italic');
+      doc.setFontSize(8);
+      doc.setTextColor(90,64,64);
+      const detLines = doc.splitTextToSize('  Detalle: ' + c.detalle, ancho - 6);
+      doc.text(detLines, margen+4, y);
+      y += detLines.length * 4.5;
+    }
+    y += 3;
+  });
+
+  if(d.obsGen){
+    y += 4;
+    if(y > 255) { doc.addPage(); y = 20; }
+    doc.setFont('helvetica','bold');
+    doc.setFontSize(10);
+    doc.setTextColor(107,26,42);
+    doc.text('OBSERVACIONES GENERALES', margen, y);
+    doc.line(margen, y+2, 210-margen, y+2);
+    y += 8;
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(26,10,0);
+    const obsLines = doc.splitTextToSize(d.obsGen, ancho);
+    doc.text(obsLines, margen, y);
+    y += obsLines.length * 5;
+  }
+
+  // Pie
+  const totalPags = doc.getNumberOfPages();
+  for(let p=1; p<=totalPags; p++){
+    doc.setPage(p);
+    doc.setFont('helvetica','normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(160,160,160);
+    doc.text('Laboratorio Normalista de Investigación Educativa (LabNIE)  ·  ENSBCS  ·  Sistema PRODEP-DGESuM 2026', margen, 290);
+    doc.text('Página ' + p + ' de ' + totalPags, 210-margen, 290, {align:'right'});
+  }
+
+  doc.save(nombreArchivo);
+}
+
 async function subirADrive(htmlContent, nombreArchivo){
   const res = await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
@@ -460,19 +575,17 @@ async function enviar(){
   try{
     const htmlContent = generarHTML(d);
     const nombreLimpio = d.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,'').trim().replace(/\s+/g,'_');
-    const nombreArchivo = `Solicitud_PRODEP_${nombreLimpio}_${d.fecha||new Date().toISOString().slice(0,10)}.html`;
+    const base = `Solicitud_PRODEP_${nombreLimpio}_${new Date().toISOString().slice(0,10)}`;
+    const nombrePDF  = base + '.pdf';
+    const nombreHTML = base + '.html';
 
-    // 1. Descargar localmente
-    const blob = new Blob([htmlContent],{type:'text/html'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href=url; a.download=nombreArchivo; a.click();
-    URL.revokeObjectURL(url);
+    // 1. Descargar como PDF
+    descargarPDF(d, nombrePDF);
 
-    // 2. Subir a Drive
+    // 2. Subir HTML a Drive
     btn.innerHTML = '<span class="spinner"></span>Guardando en Drive...';
     setStatus('Guardando en Drive...','');
-    const result = await subirADrive(htmlContent, nombreArchivo);
+    const result = await subirADrive(htmlContent, nombreHTML);
     const link = result.fileUrl || `https://drive.google.com/file/d/${result.fileId}/view`;
 
     // 3. Enviar correo al profesor
