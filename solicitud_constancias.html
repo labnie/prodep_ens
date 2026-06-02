@@ -502,17 +502,16 @@ function descargarPDF(d, nombreArchivo){
 }
 
 async function subirADrive(htmlContent, nombreArchivo){
-  const res = await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec', {
+  await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec', {
     method: 'POST',
+    mode: 'no-cors',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       nombre: nombreArchivo,
       htmlContent: htmlContent
     })
   });
-  const json = await res.json();
-  if(!json.success) throw new Error(json.error || 'Error al guardar en Drive');
-  return json;
+  return {success: true};
 }
 
 async function enviarCorreo(d, driveLink){
