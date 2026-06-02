@@ -219,8 +219,9 @@
       <div><label class="field-label">Nombre completo</label><input type="text" id="nombre" placeholder="Apellidos, Nombre(s)"></div>
       <div><label class="field-label">CURP</label><input type="text" id="curp" placeholder="18 caracteres"></div>
     </div>
+    <div class="field-full"><label class="field-label">Institución</label><input type="text" id="escuela" value="Escuela Normal Superior del Estado de Baja California Sur &quot;Profr. Enrique Estrada Lucero&quot;" readonly style="background:#f5f0f1;color:#5A4040;font-size:13px;"></div>
     <div class="field-row">
-      <div><label class="field-label">Sede de adscripción</label><input type="text" id="escuela" placeholder="Nombre oficial de la institución"></div>
+      <div><label class="field-label">Sede (o extensión)</label><input type="text" id="sede" placeholder="La Paz, San José del Cabo o Ciudad Constitución"></div>
       <div><label class="field-label">Correo institucional</label><input type="text" id="correo" placeholder="correo@inst.edu.mx"></div>
     </div>
     <div class="field-row">
@@ -334,6 +335,7 @@ function recopilar(){
     nombre: document.getElementById('nombre').value.trim(),
     curp: document.getElementById('curp').value.trim(),
     escuela: document.getElementById('escuela').value.trim(),
+    sede: document.getElementById('sede').value.trim(),
     correo: document.getElementById('correo').value.trim(),
     hrsNormal: document.getElementById('hrsNormal').value.trim(),
     hrsBasica: document.getElementById('hrsBasica').value.trim(),
@@ -369,7 +371,8 @@ function generarHTML(d){
   <div class="grid">
     <div class="field"><span>Nombre completo</span>${d.nombre||'—'}</div>
     <div class="field"><span>CURP</span>${d.curp||'—'}</div>
-    <div class="field"><span>Sede de adscripción</span>${d.escuela||'—'}</div>
+    <div class="field"><span>Institucion</span>${d.escuela||'—'}</div>
+    <div class="field"><span>Sede / Campus</span>${d.sede||'—'}</div>
     <div class="field"><span>Correo institucional</span>${d.correo||'—'}</div>
     <div class="field"><span>Horas en Sede de adscripción</span>${d.hrsNormal||'—'}</div>
     <div class="field"><span>Horas en Ed. Básica</span>${d.hrsBasica||'—'}</div>
@@ -422,7 +425,8 @@ function descargarPDF(d, nombreArchivo){
   const campos = [
     ['Nombre completo', d.nombre],
     ['CURP', d.curp],
-    ['Sede de adscripción', d.escuela],
+    ['Institucion', d.escuela],
+    ['Sede / Campus', d.sede||'No especificada'],
     ['Correo institucional', d.correo],
     ['Horas en Escuela Normal', d.hrsNormal],
     ['Horas en Ed. Básica', d.hrsBasica||'N/A'],
@@ -517,6 +521,7 @@ async function enviarCorreo(d, driveLink){
       nombre: d.nombre,
       curp: d.curp,
       escuela: d.escuela,
+      sede: d.sede,
       hrsNormal: d.hrsNormal,
       hrsBasica: d.hrsBasica,
       fecha: d.fecha,
