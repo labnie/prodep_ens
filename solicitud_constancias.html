@@ -456,7 +456,7 @@ function descargarPDF(d, nombreArchivo){
     doc.setFont('helvetica','bold');
     doc.setFontSize(8.5);
     doc.setTextColor(26,10,0);
-    const tituloLines = doc.splitTextToSize('• ' + c.titulo, ancho - 4);
+    const tituloLines = doc.splitTextToSize('- ' + c.titulo, ancho - 4);
     doc.text(tituloLines, margen+2, y);
     y += tituloLines.length * 5;
     if(c.detalle){
@@ -515,11 +515,7 @@ async function subirADrive(htmlContent, nombreArchivo){
 }
 
 async function enviarCorreo(d, driveLink){
-  const listaConstancias = d.constancias.map(c =>
-    `• ${c.titulo}${c.detalle ? ' — ' + c.detalle : ''}`
-  ).join('
-');
-
+  const listaConstancias = d.constancias.map(c => '- ' + c.titulo + (c.detalle ? ' -- ' + c.detalle : '')).join(', ');
   await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec', {
     method: 'POST',
     mode: 'no-cors',
@@ -540,6 +536,7 @@ async function enviarCorreo(d, driveLink){
   });
   return {success: true};
 }
+
 
 async function enviar(){
   const d = recopilar();
@@ -567,7 +564,7 @@ async function enviar(){
       await subirADrive(generarHTML(d), nombreHTML);
       setStatus('Guardado en Drive. Enviando correo...','');
     }catch(eDrive){
-      setStatus('⚠️ PDF descargado, pero error en Drive: '+eDrive.message,'err');
+      setStatus('[!] PDF descargado, pero error en Drive: '+eDrive.message,'err');
       btn.disabled = false;
       btn.innerHTML = '<i class="ti ti-send"></i> Enviar y guardar en Drive';
       return;
@@ -578,9 +575,9 @@ async function enviar(){
     const link = 'https://drive.google.com/drive/folders/1zHN57ZDPVEgwLcWZIe9-LZ3lpwTmOPRq';
     try{
       await enviarCorreo(d, link);
-      setStatus('✅ Solicitud registrada. Guardada en Drive y correo enviado a <strong>'+d.correo+'</strong>.','ok');
+      setStatus('OK: Solicitud registrada. Guardada en Drive y correo enviado a <strong>'+d.correo+'</strong>.','ok');
     }catch(eCorreo){
-      setStatus('⚠️ Guardado en Drive, pero error al enviar correo: '+eCorreo.message,'err');
+      setStatus('[!] Guardado en Drive, pero error al enviar correo: '+eCorreo.message,'err');
     }
 
   }catch(e){
