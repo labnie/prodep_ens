@@ -516,55 +516,29 @@ async function subirADrive(htmlContent, nombreArchivo){
 
 async function enviarCorreo(d, driveLink){
   const listaConstancias = d.constancias.map(c =>
-    `• ${c.titulo}${c.detalle ? '\n  Detalle: ' + c.detalle : ''}`
-  ).join('\n');
-  const cuerpo = `Estimado(a) ${d.nombre},
+    `• ${c.titulo}${c.detalle ? ' — ' + c.detalle : ''}`
+  ).join('
+');
 
-Su solicitud de constancias para el PRODEP Perfil Deseable 2026 ha sido registrada correctamente. A continuación el resumen:
-
-DATOS GENERALES
-──────────────────────────────
-Nombre: ${d.nombre}
-CURP: ${d.curp}
-Escuela Normal: ${d.escuela}
-Horas en Escuela Normal: ${d.hrsNormal}
-Horas en Ed. Básica: ${d.hrsBasica || 'N/A'}
-Fecha de entrega: ${d.fecha}
-
-CONSTANCIAS SOLICITADAS
-──────────────────────────────
-${listaConstancias}
-${d.obsGen ? '\nOBSERVACIONES GENERALES\n──────────────────────────────\n' + d.obsGen : ''}
-
-Puede consultar su solicitud completa en el siguiente enlace:
-${driveLink}
-
-Atentamente,
-Dirección — ENSBCS "Profr. Enrique Estrada Lucero"
-Sistema PRODEP-DGESuM 2026`;
-
-  const res = await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
+  await fetch('https://script.google.com/macros/s/AKfycbw_w7SVq9miYsj5DnSDbjQ0NO6sAOID1Hvl6Uo6zDqKSk5DKpuQW8JbTpVGgiS0HDYKtg/exec', {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:500,
-      system:`Eres un asistente que envía correos usando Gmail MCP. Envía el correo exactamente como se indica. Responde SOLO con JSON sin bloques de código: {"success":true} o {"success":false,"error":"..."}`,
-      messages:[{role:'user',content:`Envía un correo con estos datos:
-Para: ${d.correo}
-Asunto: Solicitud PRODEP 2026 registrada — ${d.nombre}
-Cuerpo:
-${cuerpo}`}],
-      mcp_servers:[{type:'url',url:'https://gmailmcp.googleapis.com/mcp/v1',name:'gmail'}]
+      accion: 'correo',
+      para: d.correo,
+      nombre: d.nombre,
+      curp: d.curp,
+      escuela: d.escuela,
+      hrsNormal: d.hrsNormal,
+      hrsBasica: d.hrsBasica,
+      fecha: d.fecha,
+      constancias: listaConstancias,
+      obsGen: d.obsGen,
+      driveLink: driveLink
     })
   });
-  const data = await res.json();
-  const textBlock = data.content?.find(b=>b.type==='text');
-  if(!textBlock) throw new Error('Sin respuesta de Gmail');
-  const clean = textBlock.text.replace(/```json|```/g,'').trim();
-  const json = JSON.parse(clean);
-  if(!json.success) throw new Error(json.error||'Error al enviar correo');
-  return json;
+  return {success: true};
 }
 
 async function enviar(){
