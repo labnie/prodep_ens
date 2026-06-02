@@ -576,6 +576,7 @@ async function enviar(){
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Procesando...';
 
+  // 1. Descargar PDF
   try{
     const htmlContent = generarHTML(d);
     const nombreLimpio = d.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g,'').trim().replace(/\s+/g,'_');
@@ -583,21 +584,30 @@ async function enviar(){
     const nombrePDF  = base + '.pdf';
     const nombreHTML = base + '.html';
 
-    // 1. Descargar como PDF
     descargarPDF(d, nombrePDF);
+    setStatus('PDF descargado. Guardando en Drive...','');
 
-    // 2. Subir HTML a Drive
+    // 2. Subir a Drive
     btn.innerHTML = '<span class="spinner"></span>Guardando en Drive...';
-    setStatus('Guardando en Drive...','');
-    await subirADrive(htmlContent, nombreHTML);
-    const link = 'https://drive.google.com/drive/folders/1zHN57ZDPVEgwLcWZIe9-LZ3lpwTmOPRq';
+    try{
+      await subirADrive(generarHTML(d), nombreHTML);
+      setStatus('Guardado en Drive. Enviando correo...','');
+    }catch(eDrive){
+      setStatus('⚠️ PDF descargado, pero error en Drive: '+eDrive.message,'err');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-send"></i> Enviar y guardar en Drive';
+      return;
+    }
 
-    // 3. Enviar correo al profesor
+    // 3. Enviar correo
     btn.innerHTML = '<span class="spinner"></span>Enviando correo...';
-    setStatus('Enviando correo al profesor...','');
-    await enviarCorreo(d, link);
-
-    setStatus(`✅ Solicitud registrada. Guardada en Drive y correo enviado a <strong>${d.correo}</strong>.`,'ok');
+    const link = 'https://drive.google.com/drive/folders/1zHN57ZDPVEgwLcWZIe9-LZ3lpwTmOPRq';
+    try{
+      await enviarCorreo(d, link);
+      setStatus('✅ Solicitud registrada. Guardada en Drive y correo enviado a <strong>'+d.correo+'</strong>.','ok');
+    }catch(eCorreo){
+      setStatus('⚠️ Guardado en Drive, pero error al enviar correo: '+eCorreo.message,'err');
+    }
 
   }catch(e){
     setStatus('Error: '+e.message,'err');
