@@ -228,6 +228,7 @@
       <div><label class="field-label">Horas en Escuela Normal</label><input type="text" id="hrsNormal" placeholder="Mín. 20 hrs/semana"></div>
       <div><label class="field-label">Horas en Ed. Básica (si aplica)</label><input type="text" id="hrsBasica" placeholder="Suma mín. 30 hrs totales"></div>
     </div>
+    <div class="field-full"><label class="field-label">Fecha de inicio de labores en la institución</label><input type="date" id="fechaInicio"></div>
   </div>
 
   <hr>
@@ -339,6 +340,7 @@ function recopilar(){
     correo: document.getElementById('correo').value.trim(),
     hrsNormal: document.getElementById('hrsNormal').value.trim(),
     hrsBasica: document.getElementById('hrsBasica').value.trim(),
+    fechaInicio: document.getElementById('fechaInicio').value,
     fecha: new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'}),
     constancias,
     obsGen: document.getElementById('obsGen').value.trim()
@@ -427,6 +429,7 @@ function descargarPDF(d, nombreArchivo){
     ['CURP', d.curp],
     ['Institucion', d.escuela],
     ['Sede / Campus', d.sede||'No especificada'],
+    ['Fecha de inicio de labores', d.fechaInicio||'—'],
     ['Correo institucional', d.correo],
     ['Horas en Escuela Normal', d.hrsNormal],
     ['Horas en Ed. Básica', d.hrsBasica||'N/A'],
@@ -519,6 +522,7 @@ async function enviarCorreo(d, driveLink){
     correo: d.correo,
     hrsNormal: d.hrsNormal,
     hrsBasica: d.hrsBasica || '',
+    fechaInicio: d.fechaInicio || '',
     fecha: d.fecha,
     constancias: constanciasStr,
     obsGen: d.obsGen || ''
